@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小航 學習規劃</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23ff8a3d'/%3E%3Cpath d='M29 47q6.5-8 13 0M58 47q6.5-8 13 0M41 61q9 9 18 0' stroke='%233b2f2a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+  </div>
+
+  <header class="topbar">
+    <button class="brand" id="homeBtn" title="回首頁">
+      <span class="mascot mascot-sm" aria-hidden="true"></span>
+      <span>
+        <span class="brand-name">小航</span>
+        <span class="brand-sub">從課業出發，向未來接軌</span>
+      </span>
+    </button>
+    <div class="stage-switch" id="stageSwitch" role="tablist" aria-label="教育階段"></div>
+    <div class="top-actions">
+      <button class="icon-btn only-mobile" id="openProfile">我的側寫</button>
+      <button class="icon-btn" id="resetBtn" title="清除所有會談與側寫">全部清除</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="main" id="view" aria-live="polite"></section>
+
+    <aside class="profile" id="profile" aria-label="我的側寫">
+      <div class="profile-head">
+        <h2>我的側寫</h2>
+        <button class="icon-btn only-mobile" id="closeProfile">關閉</button>
+      </div>
+
+      <div class="card">
+        <h3>興趣地圖</h3>
+        <svg id="radar" viewBox="0 0 300 270" role="img" aria-label="Holland 興趣六型雷達圖"></svg>
+        <p class="muted small" id="radarHint">聊得越多，地圖會越清楚。</p>
+      </div>
+
+      <div class="card">
+        <h3>關於我</h3>
+        <div id="facts"></div>
+      </div>
+
+      <div class="card">
+        <h3>我的下一步</h3>
+        <div id="actionsPanel"></div>
+      </div>
+
+      <div class="card">
+        <h3>小航為什麼這樣想</h3>
+        <ol class="why" id="why"></ol>
+      </div>
+
+      <details class="card backstage">
+        <summary>幕後：這一輪 AI 做了什麼</summary>
+        <div id="trace" class="small muted">還沒有對話。</div>
+      </details>
+
+      <p class="small muted disclaimer" id="disclaimer"></p>
+    </aside>
+  </main>
+  <div class="scrim" id="scrim"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

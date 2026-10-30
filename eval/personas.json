@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ming",
+    "name": "小明",
+    "stage": "senior_high",
+    "persona": "高一男生。數學和物理成績好，喜歡組電腦、玩 Arduino，但不知道自己要選哪一組，覺得每個方向都還好。講話簡短，不太會主動說很多，要被問才會講。",
+    "opening": "老師說要開始想選組了，可是我不知道要選什麼",
+    "expect": {"interests_top": ["I", "R"], "suggested_targets": ["info"]}
+  },
+  {
+    "id": "hua",
+    "name": "小華",
+    "stage": "senior_high",
+    "persona": "高二女生。很確定想讀心理系，因為曾經被輔導老師幫助過。國文和公民好，數學普通，生物還不錯，已經修了心理學概論多元選修。想知道還要準備什麼。",
+    "opening": "我想讀心理系，還要準備什麼？",
+    "expect": {"gap_target": "psych"}
+  },
+  {
+    "id": "yu",
+    "name": "小羽",
+    "stage": "junior_high",
+    "persona": "國二學生。美術課很有成就感，常常畫畫、剪影片，數學不好。家人希望讀普通高中，自己有點想讀設計相關的高職。",
+    "opening": "我爸媽要我讀普通高中，但我比較喜歡畫畫",
+    "expect": {"interests_top": ["A"], "suggested_targets": ["design"]}
+  }
+]

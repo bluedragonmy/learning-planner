@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+.gradio/
+# simulated conversations (rerun with `python -m eval.simulate`)
+eval/results/
