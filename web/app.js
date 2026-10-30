@@ -4,6 +4,7 @@
 "use strict";
 
 const STORE_KEY = "lp-state-v2";
+const DEMO = window.DEMO || null;   // only the static GitHub Pages build sets this (web/demo.js)
 const HOLLAND_ORDER = ["R", "I", "A", "S", "E", "C"];   // hexagon order
 const THINKING = ["小航正在想…", "正在翻資料…", "正在整理你的側寫…"];
 const CLARITY = ["完全沒頭緒", "有點模糊", "有一些想法", "蠻清楚的", "非常清楚"];
@@ -160,7 +161,9 @@ function renderLobby() {
       <p>${done.length
         ? `這是我們的第 ${n} 次會談。${pend.length ? `上次你說要「${esc(pend[0].text)}」，等等跟我說說進度吧！` : "今天想聊什麼呢？"}`
         : "我會陪你聊聊喜歡的事、擅長的科目，一起找找適合你的方向。每次會談大約 15 分鐘，聊完會幫你整理一份紀錄。"}</p>
-      <button class="btn primary big" id="startBtn">開始第 ${n} 次會談</button>
+      <button class="btn primary big" id="startBtn" ${DEMO && state.sessions.length ? "disabled" : ""}>開始第 ${n} 次會談</button>
+      ${DEMO && state.sessions.length ? `<p class="demo-hint">展示版只錄了一次會談。按右上角「全部清除」可以重新體驗。</p>` : ""}
+      ${DEMO && !state.sessions.length ? `<p class="demo-hint">你將扮演示範學生「${esc(DEMO.persona.name)}」走一次完整的會談。</p>` : ""}
     </div>`;
   if (done.length) {
     html += `<h2 class="section-title">我的會談紀錄</h2><div class="record-grid">`;
@@ -177,7 +180,9 @@ function renderLobby() {
   }
   setView(html);
   $("startBtn").onclick = () => {
-    draft = { step: 1, topics: [], note: "", clarity: null, imports: [], editor: null };
+    draft = DEMO
+      ? { step: 1, topics: [...DEMO.persona.topics], note: DEMO.persona.note, clarity: DEMO.persona.clarity_before, imports: [], editor: null }
+      : { step: 1, topics: [], note: "", clarity: null, imports: [], editor: null };
     lastIntakeStep = null;
     render();
   };
@@ -195,15 +200,17 @@ function renderIntake() {
   if (draft.step === 1) {
     html += `<div class="panel ${enter}">
       <h2>今天想聊什麼？</h2><p class="muted">可以選很多個，也可以都不選、直接寫下來。</p>
+      ${DEMO ? `<p class="demo-hint">展示版：已依示範學生「${esc(DEMO.persona.name)}」選好，直接按下一步。</p>` : ""}
       <div class="topic-grid">${info.topics.map((t, i) => `<button class="topic ${draft.topics.includes(t) ? "on" : ""}" data-i="${i}">${esc(t)}</button>`).join("")}</div>
       <label class="field"><span>還有想補充的嗎？（選填）</span>
-        <textarea id="noteInput" rows="2" maxlength="300" placeholder="例如：爸媽希望我讀醫科，但我比較喜歡畫畫">${esc(draft.note)}</textarea></label>
+        <textarea id="noteInput" rows="2" maxlength="300" placeholder="例如：爸媽希望我讀醫科，但我比較喜歡畫畫" ${DEMO ? "readonly" : ""}>${esc(draft.note)}</textarea></label>
       ${errBox("err1")}
       <div class="nav"><button class="btn ghost" id="cancelIntake">取消</button><button class="btn primary" id="next1">下一步</button></div>
     </div>`;
   } else if (draft.step === 2) {
     html += `<div class="panel ${enter}">
       <h2>現在，你對自己想走的方向有多清楚？</h2><p class="muted">沒有對錯，照現在的感覺選就好。聊完之後會再問你一次。</p>
+      ${DEMO ? `<p class="demo-hint">展示版：已依示範學生選好。</p>` : ""}
       ${clarityPicker("clarity", draft.clarity)}
       ${errBox("err2")}
       <div class="nav"><button class="btn ghost" id="back2">上一步</button><button class="btn primary" id="next2">下一步</button></div>
@@ -217,7 +224,7 @@ function renderIntake() {
       </div>
       <div id="editor"></div>
       <div class="nav"><button class="btn ghost" id="back3">上一步</button><button class="btn primary" id="startSession">開始會談</button></div>
-      <p class="small muted center">DEMO 建議用假的成績單測試：照片會送到 AI 服務處理。</p>
+      <p class="small muted center">${DEMO ? "展示版：按「用示範成績單」，會顯示 AI 對這張假成績單的真實辨識結果。" : "DEMO 建議用假的成績單測試：照片會送到 AI 服務處理。"}</p>
     </div>`;
   }
   html += `</div>`;
@@ -226,6 +233,7 @@ function renderIntake() {
   if (draft.step === 1) {
     document.querySelectorAll(".topic").forEach((b) => {
       b.onclick = () => {
+        if (DEMO) return;
         const t = info.topics[+b.dataset.i];
         draft.topics = draft.topics.includes(t) ? draft.topics.filter((x) => x !== t) : [...draft.topics, t];
         b.classList.toggle("on");
@@ -243,7 +251,7 @@ function renderIntake() {
       draft.step = 2; render();
     };
   } else if (draft.step === 2) {
-    bindClarity("clarity", (v) => { draft.clarity = v; showErr("err2", ""); });
+    if (!DEMO) bindClarity("clarity", (v) => { draft.clarity = v; showErr("err2", ""); });
     $("back2").onclick = () => { draft.step = 1; render(); };
     $("next2").onclick = () => {
       if (!draft.clarity) { showErr("err2", "請選一個最接近你現在感覺的數字。"); return; }
@@ -252,6 +260,12 @@ function renderIntake() {
   } else {
     document.querySelectorAll("[data-import]").forEach((b) => {
       b.onclick = () => openImport(b.dataset.import, b.dataset.mode);
+    });
+    document.querySelectorAll("[data-demo-photo]").forEach((b) => {
+      b.onclick = async () => {
+        const blob = await (await fetch(DEMO.sampleImage)).blob();
+        handlePhoto(b.dataset.demoPhoto, new File([blob], "sample-report.png", { type: blob.type || "image/png" }));
+      };
     });
     renderEditor();
     $("back3").onclick = () => { draft.step = 2; draft.editor = null; render(); };
@@ -280,17 +294,22 @@ function importCard(kind, title, desc) {
     <div class="ic-icon">${done ? ICONS.done : ICONS[kind]}</div>
     <div><b>${title}</b><div class="small muted">${done ? "已加入側寫" : desc}</div></div>
     <div class="ic-actions">
-      <label class="btn soft small">拍照上傳<input type="file" accept="image/*" hidden data-file="${kind}"></label>
+      ${!DEMO ? `<label class="btn soft small">拍照上傳<input type="file" accept="image/*" hidden data-file="${kind}"></label>`
+        : kind === "grades" ? `<button class="btn soft small" data-demo-photo="${kind}">用示範成績單</button>` : ""}
       <button class="btn ghost small" data-import="${kind}" data-mode="manual">手動輸入</button>
     </div></div>`;
 }
 
 // photo → shrink in the browser → /api/extract → editable table
-document.addEventListener("change", async (e) => {
+document.addEventListener("change", (e) => {
   const kind = e.target.dataset?.file;
   if (!kind || !e.target.files?.[0]) return;
   const file = e.target.files[0];
   e.target.value = "";
+  handlePhoto(kind, file);
+});
+
+async function handlePhoto(kind, file) {
   if (!file.type.startsWith("image/")) { draft.editor = { kind, error: "請選擇圖片檔（JPG 或 PNG）。" }; renderEditor(); return; }
   if (file.size > 15 * 1024 * 1024) { draft.editor = { kind, error: "圖片太大（超過 15 MB），請裁切後再上傳。" }; renderEditor(); return; }
   draft.editor = { kind, loading: true };
@@ -309,11 +328,12 @@ document.addEventListener("change", async (e) => {
     } else {
       draft.editor = { kind, source: "興趣測驗照片", note: data.data.notes, scores: data.data.scores, max: data.data.scale_max };
     }
+    draft.editor.preview = URL.createObjectURL(file);
   } catch (err) {
     draft.editor = { kind, error: err.message };
   }
   renderEditor();
-});
+}
 
 function shrinkImage(file, maxSide = 1600) {
   return new Promise((resolve, reject) => {
@@ -349,6 +369,7 @@ function renderEditor() {
 
   const bad = ed.check?.rowErrors || {};
   let html = `<div class="editor"><div class="ed-head"><b>${ed.kind === "grades" ? "確認成績" : "確認興趣測驗分數"}</b><span class="small muted">來源：${esc(ed.source)}</span></div>`;
+  if (ed.preview) html += `<img class="ed-preview" src="${ed.preview}" alt="上傳的照片，對照用">`;
   if (ed.note) html += `<p class="small muted">小航的備註：${esc(ed.note)}</p>`;
   if (ed.kind === "grades") {
     html += `<p class="small muted">分數不對可以直接改，沒有分數的科目會略過。「擅長／吃力」是小航依你自己的平均建議的，分數高不一定代表喜歡，請照你的感覺調整。</p>
@@ -518,8 +539,9 @@ function renderSession(s) {
   }
   html += `</div>
     <div class="composer">
+      ${DEMO ? demoSayHTML(s) : ""}
       <form class="input-row" id="form">
-        <textarea id="input" rows="1" maxlength="500" placeholder="說說你的想法，什麼都可以…" aria-label="輸入訊息"></textarea>
+        <textarea id="input" rows="1" maxlength="500" placeholder="${DEMO ? "展示版：請點上面的句子送出" : "說說你的想法，什麼都可以…"}" aria-label="輸入訊息" ${DEMO ? "disabled" : ""}></textarea>
         <button type="submit" class="send" id="sendBtn" aria-label="送出" ${busy ? "disabled" : ""}>
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" fill="currentColor"/></svg>
         </button>
@@ -538,8 +560,18 @@ function renderSession(s) {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(s, $("input").value); }
   };
   $("endBtn").onclick = () => endSession(s);
+  if ($("demoSay")) $("demoSay").onclick = () => send(s, $("demoSay").dataset.line);
   if ($("retryKick")) $("retryKick").onclick = () => { delete s.kickoffError; kickoff(s); };
-  if (!busy) $("input").focus();
+  if (!busy && !DEMO) $("input").focus();
+}
+
+function demoSayHTML(s) {
+  const sent = s.chat.filter((m) => m.role === "user" && !m.hidden).length;
+  const line = DEMO.persona.lines[sent];
+  if (busy || !s.chat.length) return "";
+  if (!line) return `<p class="demo-say small muted">示範對話到這裡結束了，按右上角「結束會談」看看會談整理。</p>`;
+  return `<div class="demo-say"><span class="small muted">點一下，替${esc(DEMO.persona.name)}說：</span>
+    <button type="button" class="chip" id="demoSay" data-line="${esc(line)}">${esc(line)}</button></div>`;
 }
 
 function messageHTML(role, content, extra = "") {
@@ -841,13 +873,13 @@ function renderTrace(data) {
 
 // ---------- 教育階段切換（只能在首頁切） ----------
 function renderStages() {
-  const locked = !!activeSession() || !!draft;
+  const locked = !!activeSession() || !!draft || !!DEMO;
   $("stageSwitch").innerHTML = "";
   stages.forEach((st) => {
     const b = document.createElement("button");
     b.type = "button"; b.role = "tab";
     b.textContent = st.id === "senior_high" ? "高中" : st.id === "junior_high" ? "國中" : st.name;
-    b.title = locked ? "會談進行中不能切換" : st.decisions;
+    b.title = DEMO ? "展示版固定為示範學生的教育階段" : locked ? "會談進行中不能切換" : st.decisions;
     b.disabled = locked && st.id !== state.stage;
     b.setAttribute("aria-selected", String(st.id === state.stage));
     b.onclick = () => {
@@ -894,6 +926,7 @@ async function init() {
     $("view").innerHTML = `<p class="error-box">連不上伺服器，請確認 python -m planner.app 有在執行。</p>`;
     return;
   }
+  if (DEMO) state.stage = DEMO.persona.stage;
   if (!stages.some((s) => s.id === state.stage)) state.stage = stages[0].id;
   if (!state.profile) {
     state.profile = await (await fetch(`/api/profile/new?stage=${state.stage}`)).json();

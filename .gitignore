@@ -5,3 +5,5 @@ __pycache__/
 .gradio/
 # simulated conversations (rerun with `python -m eval.simulate`)
 eval/results/
+# static demo build output (python scripts/build_site.py)
+site/
